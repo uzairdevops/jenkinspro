@@ -1,47 +1,50 @@
 pipeline {
     agent any
     environment {
-        AWS_ACCOUNT_ID="486362167312"
-        AWS_DEFAULT_REGION="us-east-1"
-        IMAGE_REPO_NAME="funny-repo"
+        AWS_ACCOUNT_ID="746170653030"
+        AWS_DEFAULT_REGION="us-east-2"
+        IMAGE_REPO_NAME="funnyprojectrepo"
         IMAGE_TAG="latest"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+        
     }
-   
-    stages {
-        
-         stage('Logging into AWS ECR') {
-            steps {
-                script {
-                sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
-                }
-                 
-            }
-        }
-        
-        stage('Cloning Git') {
-            steps {
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/sgazanfar/jenkinspro.git']])
-            }
-        }
-  
-    // Building Docker images
-    stage('Building image') {
-      steps{
-        script {
+}
+stages {
+    
+     stage('logging into AWS ECR') {
+         steps {
+             scipt {
+             sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username aws--password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+             
+             }
+         }
+     } 
+     
+     stage('Cloning Git') {
+         steps {
+             checkout 
+            
+         }
+     }
+    
+}
+
+// Building Docker images 
+stage('Building image') {
+    steps{
+        script{
           dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
         }
-      }
+    
     }
-   
-    // Uploading Docker images into AWS ECR
-    stage('Pushing to ECR') {
-     steps{  
-         script {
-                sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
-                sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-         }
-        }
-      }
-    }
+}
+
+// Uploading Docker images into AWS ECR
+stage('Pushing to ECR') {
+ steps{
+     script {
+            sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
+            sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+     }
+ }
 }
